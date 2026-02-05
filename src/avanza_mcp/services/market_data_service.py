@@ -20,6 +20,16 @@ from ..models.stock import (
     StockInfo,
     Trade,
 )
+from ..models.instruments import (
+    IndexInfo,
+    ETFInfo,
+    ETFDetails,
+    CertificateInfo,
+    WarrantInfo,
+    BondInfo,
+    OptionInfo,
+    NewsItem,
+)
 
 
 class MarketDataService:
@@ -295,4 +305,230 @@ class MarketDataService:
         endpoint = PublicEndpoint.FUND_DESCRIPTION.format(id=instrument_id)
         raw_data = await self._client.get(endpoint)
         return FundDescription.model_validate(raw_data)
+
+    # === Index Methods ===
+
+    async def get_index_info(self, instrument_id: str) -> IndexInfo:
+        """Fetch index information.
+
+        Args:
+            instrument_id: Avanza index ID
+
+        Returns:
+            Index information with quote and performance data
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.INDEX_INFO.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        return IndexInfo.model_validate(raw_data)
+
+    async def get_index_chart(
+        self, instrument_id: str, time_period: str = "one_year"
+    ) -> StockChart:
+        """Fetch index chart data.
+
+        Args:
+            instrument_id: Avanza index ID
+            time_period: Time period for chart
+
+        Returns:
+            Chart data with OHLC values
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.INDEX_CHART.format(id=instrument_id)
+        params = {"timePeriod": time_period}
+        raw_data = await self._client.get(endpoint, params=params)
+        return StockChart.model_validate(raw_data)
+
+    # === ETF Methods ===
+
+    async def get_etf_info(self, instrument_id: str) -> ETFInfo:
+        """Fetch ETF information.
+
+        Args:
+            instrument_id: Avanza ETF ID
+
+        Returns:
+            ETF information with quote and performance data
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.ETF_INFO.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        return ETFInfo.model_validate(raw_data)
+
+    async def get_etf_details(self, instrument_id: str) -> ETFDetails:
+        """Fetch detailed ETF information including holdings.
+
+        Args:
+            instrument_id: Avanza ETF ID
+
+        Returns:
+            Detailed ETF information with holdings and allocations
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.ETF_DETAILS.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        return ETFDetails.model_validate(raw_data)
+
+    # === Certificate Methods ===
+
+    async def get_certificate_info(self, instrument_id: str) -> CertificateInfo:
+        """Fetch certificate/structured product information.
+
+        Args:
+            instrument_id: Avanza certificate ID
+
+        Returns:
+            Certificate information with quote and product details
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.CERTIFICATE_INFO.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        return CertificateInfo.model_validate(raw_data)
+
+    # === Warrant Methods ===
+
+    async def get_warrant_info(self, instrument_id: str) -> WarrantInfo:
+        """Fetch warrant information including greeks.
+
+        Args:
+            instrument_id: Avanza warrant ID
+
+        Returns:
+            Warrant information with greeks and underlying data
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.WARRANT_INFO.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        return WarrantInfo.model_validate(raw_data)
+
+    # === Bond Methods ===
+
+    async def get_bond_info(self, instrument_id: str) -> BondInfo:
+        """Fetch bond information.
+
+        Args:
+            instrument_id: Avanza bond ID
+
+        Returns:
+            Bond information with yield and duration data
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.BOND_INFO.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        return BondInfo.model_validate(raw_data)
+
+    # === Option Methods ===
+
+    async def get_option_info(self, instrument_id: str) -> OptionInfo:
+        """Fetch option information.
+
+        Args:
+            instrument_id: Avanza option ID
+
+        Returns:
+            Option information with greeks
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.OPTION_INFO.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        return OptionInfo.model_validate(raw_data)
+
+    # === News Methods ===
+
+    async def get_news(self, instrument_id: str) -> list[NewsItem]:
+        """Fetch news for an instrument.
+
+        Args:
+            instrument_id: Avanza instrument ID
+
+        Returns:
+            List of news items related to the instrument
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.NEWS.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        # Handle both list and dict response formats
+        if isinstance(raw_data, list):
+            return [NewsItem.model_validate(item) for item in raw_data]
+        elif isinstance(raw_data, dict):
+            # Avanza returns "articles" for news
+            news_list = raw_data.get("articles", raw_data.get("news", raw_data.get("items", [])))
+            return [NewsItem.model_validate(item) for item in news_list]
+        return []
+
+    # === Forum Methods ===
+
+    async def get_forum_posts(self, instrument_id: str) -> dict[str, Any]:
+        """Fetch forum posts for an instrument.
+
+        Args:
+            instrument_id: Avanza instrument ID
+
+        Returns:
+            Forum data with URL and list of posts
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        endpoint = PublicEndpoint.FORUM.format(id=instrument_id)
+        raw_data = await self._client.get(endpoint)
+        return raw_data
+
+    # === Batch Methods ===
+
+    async def get_multiple_quotes(
+        self, orderbook_ids: list[str]
+    ) -> list[dict[str, Any]]:
+        """Fetch quotes for multiple instruments.
+
+        Falls back to individual requests if batch endpoint not available.
+
+        Args:
+            orderbook_ids: List of orderbook IDs
+
+        Returns:
+            List of quote data for each instrument
+
+        Raises:
+            AvanzaError: If request fails
+        """
+        try:
+            endpoint = PublicEndpoint.ORDERBOOKS.value
+            payload = {"orderbookIds": orderbook_ids}
+            raw_data = await self._client.post(endpoint, json=payload)
+            # Handle response format
+            if isinstance(raw_data, list):
+                return raw_data
+            elif isinstance(raw_data, dict):
+                return raw_data.get("orderbooks", raw_data.get("items", []))
+            return []
+        except Exception:
+            # Batch endpoint not available, fall back to individual requests
+            results = []
+            for oid in orderbook_ids:
+                try:
+                    quote = await self.get_stock_quote(oid)
+                    results.append(quote.model_dump(by_alias=True, exclude_none=True))
+                except Exception:
+                    results.append({"orderbookId": oid, "error": "Failed to fetch"})
+            return results
 

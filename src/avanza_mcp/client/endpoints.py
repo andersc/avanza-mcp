@@ -29,6 +29,43 @@ class PublicEndpoint(Enum):
     FUND_CHART_PERIODS = "/_api/fund-guide/chart/timeperiods/{id}"
     FUND_DESCRIPTION = "/_api/fund-guide/description/{id}"
 
+    # Market data - Indices (uses stock endpoint - works for indices)
+    INDEX_INFO = "/_api/market-guide/stock/{id}"
+    INDEX_CHART = "/_api/price-chart/stock/{id}"
+
+    # Market data - ETFs (uses stock endpoint - works for all tradeable instruments)
+    ETF_INFO = "/_api/market-guide/stock/{id}"
+    ETF_DETAILS = "/_api/market-etf/{id}/details"
+
+    # Market data - Certificates (uses stock endpoint)
+    CERTIFICATE_INFO = "/_api/market-guide/stock/{id}"
+    CERTIFICATE_DETAILS = "/_api/market-guide/stock/{id}/details"
+
+    # Market data - Warrants (uses stock endpoint)
+    WARRANT_INFO = "/_api/market-guide/stock/{id}"
+
+    # Market data - Bonds (uses stock endpoint)
+    BOND_INFO = "/_api/market-guide/stock/{id}"
+
+    # Market data - Options (uses stock endpoint)
+    OPTION_INFO = "/_api/market-guide/stock/{id}"
+
+    # Market data - Futures/Forwards
+    FUTURE_FORWARD_INFO = "/_api/market-guide/stock/{id}"
+
+    # News
+    NEWS = "/_api/market-guide/news/{id}"
+
+    # Forum/Social
+    FORUM = "/_api/market-guide/forum/{id}"
+
+    # Generic instrument endpoint
+    INSTRUMENT = "/_api/market-guide/{instrument_type}/{id}"
+    INSTRUMENT_DETAILS = "/_api/market-guide/{instrument_type}/{id}/details"
+
+    # Multiple orderbooks
+    ORDERBOOKS = "/_api/trading-critical/rest/orderbook/list"
+
     def format(self, **kwargs: str | int) -> str:
         """Format endpoint path with variables.
 
